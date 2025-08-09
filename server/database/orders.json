@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1754747424446",
+    "userId": "1754142642057",
+    "items": [
+      {
+        "id": "1754143190783",
+        "name": "shoes",
+        "price": 50,
+        "imageUrl": "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
+        "weight": 2,
+        "quantity": 1
+      }
+    ],
+    "shippingAddress": {
+      "fullName": "seller ali",
+      "address": "1230 new st",
+      "city": "nowhere",
+      "country": "United Kingdom"
+    },
+    "total": 60,
+    "status": "paid",
+    "paymentIntentId": "pi_3RuDAnR3uhhNImUT2dL7nPWr",
+    "createdAt": "2025-08-09T13:50:24.446Z"
+  }
+]

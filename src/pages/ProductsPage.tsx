@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter } from 'lucide-react';
 import axios from 'axios';
 
@@ -18,6 +18,7 @@ interface Category {
 }
 
 const ProductsPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -25,6 +26,14 @@ const ProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('name');
   const [loading, setLoading] = useState(true);
+
+  // Get search term from URL params
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get('search');
+    if (urlSearchTerm) {
+      setSearchTerm(urlSearchTerm);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +55,16 @@ const ProductsPage: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Update URL when search term changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    if (value) {
+      setSearchParams({ search: value });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   useEffect(() => {
     let filtered = [...products];
@@ -91,7 +110,9 @@ const ProductsPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">All Products</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            {searchTerm ? `Search Results for "${searchTerm}"` : 'All Products'}
+          </h1>
           
           {/* Search and Filter Bar */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -103,7 +124,7 @@ const ProductsPage: React.FC = () => {
                   type="text"
                   placeholder="Search products..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -140,15 +161,39 @@ const ProductsPage: React.FC = () => {
 
           {/* Results count */}
           <p className="text-gray-600 mb-6">
-            Showing {filteredProducts.length} of {products.length} products
+            {searchTerm ? (
+              <>
+                Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} for "{searchTerm}"
+                {filteredProducts.length !== products.length && (
+                  <span className="text-gray-500"> out of {products.length} total products</span>
+                )}
+              </>
+            ) : (
+              `Showing ${filteredProducts.length} of ${products.length} products`
+            )}
           </p>
         </div>
 
         {/* Products Grid */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {searchTerm ? `No products found for "${searchTerm}"` : 'No products found'}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm 
+                ? 'Try adjusting your search terms or browse all products below.'
+                : 'Try adjusting your filter criteria.'
+              }
+            </p>
+            {searchTerm && (
+              <button
+                onClick={() => handleSearchChange('')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
+              >
+                Clear Search
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

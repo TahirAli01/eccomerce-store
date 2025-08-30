@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import { ShoppingCart, User, Menu, X, Store, Settings, Search, Bell, Heart, UserCircle } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Store, Settings, Search, Bell, Heart, UserCircle, ChevronDown, LogOut, User as UserIcon } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -12,6 +12,8 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +22,17 @@ const Navbar: React.FC = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleLogout = () => {
@@ -74,7 +87,7 @@ const Navbar: React.FC = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  MarketPlace
+                  ZapMart
                 </span>
                 <span className="text-xs text-gray-500 -mt-1">Your Ultimate Store</span>
               </div>
@@ -166,21 +179,61 @@ const Navbar: React.FC = () => {
 
             {user ? (
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-xl">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <UserCircle className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="text-sm">
-                    <div className="font-medium text-gray-900">{user.name}</div>
-                    <div className="text-xs text-gray-500 capitalize">{user.role}</div>
-                  </div>
+                <div className="relative" ref={userDropdownRef}>
+                  <button
+                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                    className="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300 cursor-pointer"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <UserCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="text-sm text-left">
+                      <div className="font-medium text-gray-900">{user.name}</div>
+                      <div className="text-xs text-gray-500 capitalize">{user.role}</div>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${
+                      isUserDropdownOpen ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+
+                  {/* User Dropdown Menu */}
+                  {isUserDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+                      
+                      <Link
+                        to="/profile"
+                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        <UserIcon className="h-4 w-4 mr-3 text-gray-500" />
+                        Profile Settings
+                      </Link>
+                      
+                      <Link
+                        to={getDashboardPath()}
+                        className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-3 text-gray-500" />
+                        Dashboard
+                      </Link>
+                      
+                      <div className="border-t border-gray-100 my-1"></div>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4 mr-3" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl text-sm font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-                >
-                  Logout
-                </button>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
@@ -301,6 +354,15 @@ const Navbar: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                
+                <Link
+                  to="/profile"
+                  className="block w-full px-4 py-3 text-left text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profile Settings
+                </Link>
+                
                 <button
                   onClick={handleLogout}
                   className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl font-medium transition-all duration-300"

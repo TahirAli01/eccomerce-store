@@ -81,6 +81,7 @@ const CheckoutForm: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onErro
       base: {
         fontSize: '16px',
         color: '#424770',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
         '::placeholder': {
           color: '#aab7c4',
         },
@@ -98,10 +99,12 @@ const CheckoutForm: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onErro
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Card Details
         </label>
-        <CardElement
-          options={cardElementOptions}
-          className="p-3 border border-gray-300 rounded-md"
-        />
+        <div className="w-full">
+          <CardElement
+            options={cardElementOptions}
+            className="p-4 border border-gray-300 rounded-md min-h-[60px] w-full"
+          />
+        </div>
       </div>
 
       {error && (

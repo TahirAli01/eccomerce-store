@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Star } from 'lucide-react';
 import axios from 'axios';
 
 interface Product {
@@ -10,6 +10,17 @@ interface Product {
   imageUrl: string;
   description: string;
   categoryId: string;
+  reviewStats?: {
+    totalReviews: number;
+    averageRating: number;
+    ratingDistribution: {
+      5: number;
+      4: number;
+      3: number;
+      2: number;
+      1: number;
+    };
+  };
 }
 
 interface Category {
@@ -89,6 +100,10 @@ const ProductsPage: React.FC = () => {
           return a.price - b.price;
         case 'price-high':
           return b.price - a.price;
+        case 'rating':
+          const ratingA = a.reviewStats?.averageRating || 0;
+          const ratingB = b.reviewStats?.averageRating || 0;
+          return ratingB - ratingA;
         case 'name':
         default:
           return a.name.localeCompare(b.name);
@@ -155,6 +170,7 @@ const ProductsPage: React.FC = () => {
                 <option value="name">Sort by Name</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
+                <option value="rating">Highest Rating</option>
               </select>
             </div>
           </div>
@@ -208,9 +224,31 @@ const ProductsPage: React.FC = () => {
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
                     {product.name}
                   </h3>
+                  
+                  {/* Rating Display */}
+                  {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="flex items-center space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 ${
+                              star <= Math.round(product.reviewStats!.averageRating)
+                                ? 'text-yellow-400 fill-current'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-600">
+                        ({product.reviewStats.totalReviews})
+                      </span>
+                    </div>
+                  )}
+                  
                   <p className="text-gray-600 mb-3 text-sm line-clamp-2">
                     {product.description}
                   </p>

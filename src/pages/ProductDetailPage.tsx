@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, Package, Truck } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Package, Truck, Star } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import ReviewForm from '../components/ReviewForm';
+import ReviewList from '../components/ReviewList';
 
 interface Product {
   id: string;
@@ -13,32 +16,68 @@ interface Product {
   weight: number;
   dimensions: string;
   categoryId: string;
+  reviewStats?: {
+    totalReviews: number;
+    averageRating: number;
+    ratingDistribution: {
+      5: number;
+      4: number;
+      3: number;
+      2: number;
+      1: number;
+    };
+  };
 }
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [userReview, setUserReview] = useState<{
+    id: string;
+    rating: number;
+    review: string;
+  } | undefined>(undefined);
+
+  const fetchProduct = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/products/${id}`);
+      setProduct(response.data);
+      
+      // Check if user has already reviewed this product
+      if (user) {
+        try {
+          const reviewsResponse = await axios.get(`http://localhost:3001/api/products/${id}/reviews`);
+          const userReviewData = reviewsResponse.data.find((review: any) => review.userId === user.id);
+          if (userReviewData) {
+            setUserReview({
+              id: userReviewData.id,
+              rating: userReviewData.rating,
+              review: userReviewData.review
+            });
+          } else {
+            setUserReview(undefined);
+          }
+        } catch (error) {
+          console.error('Error fetching user review:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await axios.get(`http://localhost:3001/api/products/${id}`);
-        setProduct(response.data);
-      } catch (error) {
-        console.error('Error fetching product:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (id) {
       fetchProduct();
     }
-  }, [id]);
+  }, [id, user]);
 
   const handleAddToCart = () => {
     if (product) {
@@ -52,6 +91,13 @@ const ProductDetailPage: React.FC = () => {
         });
       }
       navigate('/checkout');
+    }
+  };
+
+  const handleReviewSubmitted = () => {
+    // Refresh product data and user review
+    if (id) {
+      fetchProduct();
     }
   };
 
@@ -106,6 +152,27 @@ const ProductDetailPage: React.FC = () => {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
                 <p className="text-3xl font-bold text-blue-600">£{product.price.toFixed(2)}</p>
+                
+                {/* Rating Display */}
+                {product.reviewStats && product.reviewStats.totalReviews > 0 && (
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-5 w-5 ${
+                            star <= Math.round(product.reviewStats!.averageRating)
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      {product.reviewStats.averageRating.toFixed(1)} ({product.reviewStats.totalReviews} reviews)
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -182,6 +249,29 @@ const ProductDetailPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
+          
+          {/* Review Form - Only show if user has purchased this product */}
+          <div className="mb-8">
+            <ReviewForm
+              productId={product.id}
+              onReviewSubmitted={handleReviewSubmitted}
+              existingReview={userReview}
+            />
+          </div>
+
+          {/* Review List */}
+          {product.reviewStats && (
+            <ReviewList
+              productId={product.id}
+              reviewStats={product.reviewStats}
+              onReviewSubmitted={handleReviewSubmitted}
+            />
+          )}
         </div>
       </div>
     </div>

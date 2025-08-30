@@ -7,6 +7,10 @@ interface User {
   name: string;
   role: 'customer' | 'seller' | 'admin';
   isApproved: boolean;
+  address?: string;
+  city?: string;
+  country?: string;
+  phone?: string;
 }
 
 interface AuthContextType {
@@ -15,6 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: string) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
   loading: boolean;
 }
 
@@ -98,12 +103,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   const value = {
     user,
     token,
     login,
     register,
     logout,
+    updateUser,
     loading,
   };
 

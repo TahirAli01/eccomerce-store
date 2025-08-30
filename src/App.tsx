@@ -12,6 +12,7 @@ import CustomerDashboard from './pages/CustomerDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import CheckoutPage from './pages/CheckoutPage';
+import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -32,6 +33,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <CheckoutPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
                   </ProtectedRoute>
                 }
               />

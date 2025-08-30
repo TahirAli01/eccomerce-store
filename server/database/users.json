@@ -6,16 +6,20 @@
     "name": "Admin User",
     "role": "admin",
     "isApproved": true,
+    "isBanned": false,
     "createdAt": "2025-08-02T13:49:16.130Z"
   },
   {
     "id": "1754142642057",
     "email": "hhhhjdi@gmail.com",
     "password": "$2a$10$82iptrUPVL9KGIyUlhWxXOHxJUnkLtHEJzyzsZjdZK4RwRBonp2tS",
-    "name": "seller ali",
+    "name": "ali",
     "role": "customer",
     "isApproved": true,
-    "createdAt": "2025-08-02T13:50:42.057Z"
+    "isBanned": false,
+    "createdAt": "2025-08-02T13:50:42.057Z",
+    "country": "United Kingdom",
+    "updatedAt": "2025-08-23T14:02:13.413Z"
   },
   {
     "id": "1754142969149",
@@ -24,6 +28,7 @@
     "name": "Tahir Ali",
     "role": "seller",
     "isApproved": true,
+    "isBanned": false,
     "createdAt": "2025-08-02T13:56:09.149Z"
   }
 ]

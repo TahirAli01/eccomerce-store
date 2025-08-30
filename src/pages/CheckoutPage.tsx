@@ -20,6 +20,7 @@ const CheckoutPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   const deliveryCharge = 10;
   const subtotal = getTotalPrice();
@@ -63,13 +64,10 @@ const CheckoutPage: React.FC = () => {
         throw new Error('Failed to create order');
       }
 
+      const orderData = await response.json();
+      setOrderId(orderData.id);
       setPaymentStatus('success');
       clearCart();
-      
-      // Redirect to success page after a short delay
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
     } catch (error) {
       setPaymentError('Failed to create order. Please contact support.');
       setPaymentStatus('error');
@@ -266,8 +264,43 @@ const CheckoutPage: React.FC = () => {
                     <div className="text-center py-6">
                       <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-green-800 mb-2">Payment Successful!</h3>
-                      <p className="text-green-600">Your order has been placed successfully.</p>
-                      <p className="text-sm text-gray-500 mt-2">Redirecting to home page...</p>
+                      <p className="text-green-600 mb-4">Your order has been placed successfully.</p>
+                      
+                      {/* Review Prompt */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                        <h4 className="text-md font-semibold text-blue-800 mb-2">Share Your Experience!</h4>
+                        <p className="text-blue-700 text-sm mb-3">
+                          Help other customers by reviewing the products you just purchased.
+                        </p>
+                        <button
+                          onClick={() => {
+                            // Navigate to the first product in the cart for review
+                            if (items.length > 0) {
+                              navigate(`/products/${items[0].id}`);
+                            } else {
+                              navigate('/products');
+                            }
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                        >
+                          Leave a Review
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => navigate('/products')}
+                          className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm transition-colors mr-2"
+                        >
+                          Continue Shopping
+                        </button>
+                        <button
+                          onClick={() => navigate('/')}
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors"
+                        >
+                          Go to Home
+                        </button>
+                      </div>
                     </div>
                   ) : paymentStatus === 'error' ? (
                     <div className="text-center py-6">

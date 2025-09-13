@@ -80,16 +80,16 @@ const Navbar: React.FC = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                   <Store className="h-6 w-6 lg:h-7 lg:w-7 text-white" />
                 </div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
               </div>
               <div className="flex flex-col">
-                <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="text-xl lg:text-2xl font-bold text-blue-600">
                   ZapMart
                 </span>
-                <span className="text-xs text-gray-500 -mt-1">Your Ultimate Store</span>
+                <span className="text-xs text-gray-500 mt-1/2 font-bold ">Your Ultimate Store</span>
               </div>
             </Link>
           </div>
@@ -158,7 +158,7 @@ const Navbar: React.FC = () => {
                 >
                   <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
                   {getItemCount() > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold animate-pulse">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold animate-pulse">
                       {getItemCount()}
                     </span>
                   )}
@@ -184,7 +184,7 @@ const Navbar: React.FC = () => {
                     onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                     className="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300 cursor-pointer"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                       <UserCircle className="h-5 w-5 text-white" />
                     </div>
                     <div className="text-sm text-left">
@@ -245,7 +245,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl text-sm font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
                 >
                   Sign Up
                 </Link>
@@ -262,7 +262,7 @@ const Navbar: React.FC = () => {
               >
                 <ShoppingCart className="h-6 w-6" />
                 {getItemCount() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
                     {getItemCount()}
                   </span>
                 )}
@@ -345,7 +345,7 @@ const Navbar: React.FC = () => {
               <div className="pt-4 border-t border-gray-100 space-y-3">
                 <div className="px-4 py-3 bg-gray-50 rounded-xl">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
                       <UserCircle className="h-6 w-6 text-white" />
                     </div>
                     <div>
@@ -365,7 +365,7 @@ const Navbar: React.FC = () => {
                 
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-xl font-medium transition-all duration-300"
+                  className="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all duration-300"
                 >
                   Logout
                 </button>
@@ -381,7 +381,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="block w-full px-4 py-3 text-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-medium transition-all duration-300"
+                  className="block w-full px-4 py-3 text-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-300"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Sign Up

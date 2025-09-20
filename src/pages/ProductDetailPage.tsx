@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, Package, Truck, Star } from 'lucide-react';
-import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
-import ReviewForm from '../components/ReviewForm';
-import ReviewList from '../components/ReviewList';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ShoppingCart, ArrowLeft, Package, Truck, Star } from "lucide-react";
+import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
+import ReviewForm from "../components/ReviewForm";
+import ReviewList from "../components/ReviewList";
 
 interface Product {
   id: string;
@@ -37,37 +37,46 @@ const ProductDetailPage: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [userReview, setUserReview] = useState<{
-    id: string;
-    rating: number;
-    review: string;
-  } | undefined>(undefined);
+  const [userReview, setUserReview] = useState<
+    | {
+        id: string;
+        rating: number;
+        review: string;
+      }
+    | undefined
+  >(undefined);
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/products/${id}`);
+      const response = await axios.get(
+        `http://localhost:3001/api/products/${id}`
+      );
       setProduct(response.data);
-      
+
       // Check if user has already reviewed this product
       if (user) {
         try {
-          const reviewsResponse = await axios.get(`http://localhost:3001/api/products/${id}/reviews`);
-          const userReviewData = reviewsResponse.data.find((review: any) => review.userId === user.id);
+          const reviewsResponse = await axios.get(
+            `http://localhost:3001/api/reviews/products/${id}`
+          );
+          const userReviewData = reviewsResponse.data.find(
+            (review: { user: { _id: string } }) => review.user._id === user.id
+          );
           if (userReviewData) {
             setUserReview({
               id: userReviewData.id,
               rating: userReviewData.rating,
-              review: userReviewData.review
+              review: userReviewData.review,
             });
           } else {
             setUserReview(undefined);
           }
         } catch (error) {
-          console.error('Error fetching user review:', error);
+          console.error("Error fetching user review:", error);
         }
       }
     } catch (error) {
-      console.error('Error fetching product:', error);
+      console.error("Error fetching product:", error);
     } finally {
       setLoading(false);
     }
@@ -77,7 +86,7 @@ const ProductDetailPage: React.FC = () => {
     if (id) {
       fetchProduct();
     }
-  }, [id, user]);
+  }, [id, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAddToCart = () => {
     if (product) {
@@ -90,7 +99,7 @@ const ProductDetailPage: React.FC = () => {
           weight: product.weight,
         });
       }
-      navigate('/checkout');
+      navigate("/checkout");
     }
   };
 
@@ -113,9 +122,11 @@ const ProductDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Product not found
+          </h2>
           <button
-            onClick={() => navigate('/products')}
+            onClick={() => navigate("/products")}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
           >
             Back to Products
@@ -129,7 +140,7 @@ const ProductDetailPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
-          onClick={() => navigate('/products')}
+          onClick={() => navigate("/products")}
           className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 mb-6 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -150,34 +161,45 @@ const ProductDetailPage: React.FC = () => {
             {/* Product Details */}
             <div className="space-y-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-                <p className="text-3xl font-bold text-blue-600">£{product.price.toFixed(2)}</p>
-                
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  {product.name}
+                </h1>
+                <p className="text-3xl font-bold text-blue-600">
+                  £{product.price.toFixed(2)}
+                </p>
+
                 {/* Rating Display */}
-                {product.reviewStats && product.reviewStats.totalReviews > 0 && (
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="flex items-center space-x-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-5 w-5 ${
-                            star <= Math.round(product.reviewStats!.averageRating)
-                              ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
+                {product.reviewStats &&
+                  product.reviewStats.totalReviews > 0 && (
+                    <div className="flex items-center space-x-2 mt-2">
+                      <div className="flex items-center space-x-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-5 w-5 ${
+                              star <=
+                              Math.round(product.reviewStats!.averageRating)
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-600">
+                        {product.reviewStats.averageRating.toFixed(1)} (
+                        {product.reviewStats.totalReviews} reviews)
+                      </span>
                     </div>
-                    <span className="text-sm text-gray-600">
-                      {product.reviewStats.averageRating.toFixed(1)} ({product.reviewStats.totalReviews} reviews)
-                    </span>
-                  </div>
-                )}
+                  )}
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
-                <p className="text-gray-600 leading-relaxed">{product.description}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Description
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {product.description}
+                </p>
               </div>
 
               {/* Product Specifications */}
@@ -204,14 +226,19 @@ const ProductDetailPage: React.FC = () => {
                 <Truck className="h-6 w-6 text-blue-600" />
                 <div>
                   <p className="font-medium text-gray-900">UK Delivery</p>
-                  <p className="text-gray-600">Fast delivery across the UK for £10</p>
+                  <p className="text-gray-600">
+                    Fast delivery across the UK for £10
+                  </p>
                 </div>
               </div>
 
               {/* Quantity and Add to Cart */}
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="quantity"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Quantity
                   </label>
                   <select
@@ -239,7 +266,9 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Shipping Information */}
               <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Shipping Information</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Shipping Information
+                </h3>
                 <ul className="space-y-2 text-gray-600">
                   <li>• Free returns within 30 days</li>
                   <li>• Secure packaging for safe delivery</li>
@@ -253,8 +282,10 @@ const ProductDetailPage: React.FC = () => {
 
         {/* Reviews Section */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
-          
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Customer Reviews
+          </h2>
+
           {/* Review Form - Only show if user has purchased this product */}
           <div className="mb-8">
             <ReviewForm

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Star, Send, Edit, Trash2 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { Star, Send, Edit, Trash2 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
 
 interface ReviewFormProps {
   productId: string;
@@ -13,66 +13,120 @@ interface ReviewFormProps {
   };
 }
 
-const ReviewForm: React.FC<ReviewFormProps> = ({ 
-  productId, 
-  onReviewSubmitted, 
-  existingReview 
+const ReviewForm: React.FC<ReviewFormProps> = ({
+  productId,
+  onReviewSubmitted,
+  existingReview,
 }) => {
   const { user } = useAuth();
   const [rating, setRating] = useState(existingReview?.rating || 0);
-  const [review, setReview] = useState(existingReview?.review || '');
+  const [review, setReview] = useState(existingReview?.review || "");
   const [hoveredRating, setHoveredRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  // Check if user has purchased this product
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [checkingPurchase, setCheckingPurchase] = useState(true);
+
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (!user) {
+        setCheckingPurchase(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://localhost:3001/api/orders", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        const hasBought = response.data.some((order: unknown) => {
+          const orderData = order as {
+            status: string;
+            items: Array<{ product: string }>;
+          };
+          return (
+            orderData.status === "paid" &&
+            orderData.items.some((item) => item.product === productId)
+          );
+        });
+
+        setHasPurchased(hasBought);
+      } catch (error) {
+        console.error("Error checking purchase status:", error);
+        setHasPurchased(false);
+      } finally {
+        setCheckingPurchase(false);
+      }
+    };
+
+    checkPurchaseStatus();
+  }, [productId, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!rating || rating < 1) {
-      setError('Please select a rating');
+      setError("Please select a rating");
       return;
     }
-    
+
     if (!review.trim()) {
-      setError('Please write a review');
+      setError("Please write a review");
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       if (existingReview && isEditing) {
         // Update existing review
-        await axios.put(`http://localhost:3001/api/reviews/${existingReview.id}`, {
-          rating,
-          review: review.trim()
-        }, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+        await axios.put(
+          `http://localhost:3001/api/reviews/${existingReview.id}`,
+          {
+            rating,
+            review: review.trim(),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           }
-        });
+        );
       } else {
         // Create new review
-        await axios.post(`http://localhost:3001/api/products/${productId}/reviews`, {
-          rating,
-          review: review.trim()
-        }, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+        await axios.post(
+          `http://localhost:3001/api/reviews/products/${productId}`,
+          {
+            rating,
+            review: review.trim(),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           }
-        });
+        );
       }
-      
+
       onReviewSubmitted();
       if (!existingReview) {
         setRating(0);
-        setReview('');
+        setReview("");
       }
       setIsEditing(false);
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to submit review');
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message || "Failed to submit review"
+          : "Failed to submit review";
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -80,19 +134,27 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
   const handleDelete = async () => {
     if (!existingReview) return;
-    
-    if (!confirm('Are you sure you want to delete this review?')) return;
-    
+
+    if (!confirm("Are you sure you want to delete this review?")) return;
+
     setIsSubmitting(true);
     try {
-      await axios.delete(`http://localhost:3001/api/reviews/${existingReview.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+      await axios.delete(
+        `http://localhost:3001/api/reviews/${existingReview.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-      });
+      );
       onReviewSubmitted();
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to delete review');
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message || "Failed to delete review"
+          : "Failed to delete review";
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -101,40 +163,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   if (!user) {
     return (
       <div className="bg-gray-50 p-6 rounded-lg border">
-        <p className="text-gray-600 text-center">Please log in to leave a review</p>
+        <p className="text-gray-600 text-center">
+          Please log in to leave a review
+        </p>
       </div>
     );
   }
-
-  // Check if user has purchased this product
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [checkingPurchase, setCheckingPurchase] = useState(true);
-
-  useEffect(() => {
-    const checkPurchaseStatus = async () => {
-      try {
-        const response = await axios.get('http://localhost:3001/api/orders', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        const hasBought = response.data.some((order: any) => 
-          order.status === 'paid' && 
-          order.items.some((item: any) => item.id === productId)
-        );
-        
-        setHasPurchased(hasBought);
-      } catch (error) {
-        console.error('Error checking purchase status:', error);
-        setHasPurchased(false);
-      } finally {
-        setCheckingPurchase(false);
-      }
-    };
-
-    checkPurchaseStatus();
-  }, [productId]);
 
   if (checkingPurchase) {
     return (
@@ -151,9 +185,11 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     return (
       <div className="bg-gray-50 p-6 rounded-lg border">
         <p className="text-gray-600 text-center">
-          You can only review products you have purchased. 
+          You can only review products you have purchased.
           <br />
-          <span className="text-sm text-gray-500">Complete a purchase to leave a review.</span>
+          <span className="text-sm text-gray-500">
+            Complete a purchase to leave a review.
+          </span>
         </p>
       </div>
     );
@@ -182,15 +218,15 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             </button>
           </div>
         </div>
-        
+
         <div className="flex items-center mb-3">
           {[1, 2, 3, 4, 5].map((star) => (
             <Star
               key={star}
               className={`h-5 w-5 ${
                 star <= existingReview.rating
-                  ? 'text-yellow-400 fill-current'
-                  : 'text-gray-300'
+                  ? "text-yellow-400 fill-current"
+                  : "text-gray-300"
               }`}
             />
           ))}
@@ -198,7 +234,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             {existingReview.rating}/5
           </span>
         </div>
-        
+
         <p className="text-gray-700">{existingReview.review}</p>
       </div>
     );
@@ -207,9 +243,9 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   return (
     <div className="bg-white p-6 rounded-lg border shadow-sm">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        {existingReview ? 'Edit Review' : 'Write a Review'}
+        {existingReview ? "Edit Review" : "Write a Review"}
       </h3>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Rating Selection */}
         <div>
@@ -229,21 +265,24 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 <Star
                   className={`h-8 w-8 ${
                     star <= (hoveredRating || rating)
-                      ? 'text-yellow-400 fill-current'
-                      : 'text-gray-300'
+                      ? "text-yellow-400 fill-current"
+                      : "text-gray-300"
                   }`}
                 />
               </button>
             ))}
             <span className="ml-3 text-sm text-gray-600">
-              {rating > 0 ? `${rating}/5` : 'Select rating'}
+              {rating > 0 ? `${rating}/5` : "Select rating"}
             </span>
           </div>
         </div>
 
         {/* Review Text */}
         <div>
-          <label htmlFor="review" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="review"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
             Review *
           </label>
           <textarea
@@ -276,11 +315,13 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                <span>{existingReview ? 'Update Review' : 'Submit Review'}</span>
+                <span>
+                  {existingReview ? "Update Review" : "Submit Review"}
+                </span>
               </>
             )}
           </button>
-          
+
           {existingReview && (
             <button
               type="button"
@@ -288,7 +329,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 setIsEditing(false);
                 setRating(existingReview.rating);
                 setReview(existingReview.review);
-                setError('');
+                setError("");
               }}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >

@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Star, CheckCircle, Calendar } from 'lucide-react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { Star, CheckCircle, Calendar } from "lucide-react";
+import axios from "axios";
 
 interface Review {
   id: string;
-  userId: string;
-  userName: string;
+  user: {
+    _id: string;
+    name: string;
+  };
   rating: number;
   review: string;
   createdAt: string;
-  isVerified: boolean;
+  isVerified?: boolean;
 }
 
 interface ReviewStats {
@@ -27,35 +29,33 @@ interface ReviewStats {
 interface ReviewListProps {
   productId: string;
   reviewStats: ReviewStats;
-  onReviewSubmitted: () => void;
+  onReviewSubmitted?: () => void;
 }
 
-const ReviewList: React.FC<ReviewListProps> = ({ 
-  productId, 
-  reviewStats, 
-  onReviewSubmitted 
-}) => {
+const ReviewList: React.FC<ReviewListProps> = ({ productId, reviewStats }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'newest' | 'rating'>('newest');
+  const [sortBy, setSortBy] = useState<"newest" | "rating">("newest");
 
   useEffect(() => {
     fetchReviews();
-  }, [productId]);
+  }, [productId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/products/${productId}/reviews`);
+      const response = await axios.get(
+        `http://localhost:3001/api/reviews/products/${productId}`
+      );
       setReviews(response.data);
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      console.error("Error fetching reviews:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const sortedReviews = [...reviews].sort((a, b) => {
-    if (sortBy === 'newest') {
+    if (sortBy === "newest") {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     } else {
       return b.rating - a.rating;
@@ -63,16 +63,22 @@ const ReviewList: React.FC<ReviewListProps> = ({
   });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const getRatingPercentage = (rating: number) => {
     if (reviewStats.totalReviews === 0) return 0;
-    return Math.round((reviewStats.ratingDistribution[rating as keyof typeof reviewStats.ratingDistribution] / reviewStats.totalReviews) * 100);
+    return Math.round(
+      (reviewStats.ratingDistribution[
+        rating as keyof typeof reviewStats.ratingDistribution
+      ] /
+        reviewStats.totalReviews) *
+        100
+    );
   };
 
   if (loading) {
@@ -89,8 +95,10 @@ const ReviewList: React.FC<ReviewListProps> = ({
     <div className="space-y-6">
       {/* Review Statistics */}
       <div className="bg-white p-6 rounded-lg border shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Reviews</h3>
-        
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Customer Reviews
+        </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Overall Rating */}
           <div className="text-center">
@@ -103,14 +111,15 @@ const ReviewList: React.FC<ReviewListProps> = ({
                   key={star}
                   className={`h-5 w-5 ${
                     star <= Math.round(reviewStats.averageRating)
-                      ? 'text-yellow-400 fill-current'
-                      : 'text-gray-300'
+                      ? "text-yellow-400 fill-current"
+                      : "text-gray-300"
                   }`}
                 />
               ))}
             </div>
             <div className="text-sm text-gray-600">
-              {reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''}
+              {reviewStats.totalReviews} review
+              {reviewStats.totalReviews !== 1 ? "s" : ""}
             </div>
           </div>
 
@@ -130,7 +139,11 @@ const ReviewList: React.FC<ReviewListProps> = ({
                     ></div>
                   </div>
                   <span className="text-sm text-gray-600 w-12 text-right">
-                    {reviewStats.ratingDistribution[rating as keyof typeof reviewStats.ratingDistribution]}
+                    {
+                      reviewStats.ratingDistribution[
+                        rating as keyof typeof reviewStats.ratingDistribution
+                      ]
+                    }
                   </span>
                 </div>
               ))}
@@ -143,13 +156,13 @@ const ReviewList: React.FC<ReviewListProps> = ({
       {reviews.length > 0 && (
         <div className="flex items-center justify-between">
           <h4 className="text-lg font-medium text-gray-900">
-            {reviews.length} Review{reviews.length !== 1 ? 's' : ''}
+            {reviews.length} Review{reviews.length !== 1 ? "s" : ""}
           </h4>
           <div className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">Sort by:</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as 'newest' | 'rating')}
+              onChange={(e) => setSortBy(e.target.value as "newest" | "rating")}
               className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="newest">Newest</option>
@@ -168,12 +181,17 @@ const ReviewList: React.FC<ReviewListProps> = ({
       ) : (
         <div className="space-y-4">
           {sortedReviews.map((review) => (
-            <div key={review.id} className="bg-white p-4 rounded-lg border shadow-sm">
+            <div
+              key={review.id}
+              className="bg-white p-4 rounded-lg border shadow-sm"
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                  <span className="font-medium text-gray-900">{review.userName}</span>
+                  <span className="font-medium text-gray-900">
+                    {review.user.name}
+                  </span>
                   {review.isVerified && (
-                    <CheckCircle className="h-4 w-4 text-green-500" title="Verified Purchase" />
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                   )}
                 </div>
                 <div className="flex items-center space-x-1">
@@ -182,16 +200,16 @@ const ReviewList: React.FC<ReviewListProps> = ({
                       key={star}
                       className={`h-4 w-4 ${
                         star <= review.rating
-                          ? 'text-yellow-400 fill-current'
-                          : 'text-gray-300'
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
                 </div>
               </div>
-              
+
               <p className="text-gray-700 mb-3">{review.review}</p>
-              
+
               <div className="flex items-center text-sm text-gray-500">
                 <Calendar className="h-4 w-4 mr-1" />
                 {formatDate(review.createdAt)}
@@ -205,4 +223,3 @@ const ReviewList: React.FC<ReviewListProps> = ({
 };
 
 export default ReviewList;
-

@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import React, { useState, useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
   CardElement,
   useStripe,
   useElements,
-} from '@stripe/react-stripe-js';
-import { API_ENDPOINTS } from '../config/api';
+} from "@stripe/react-stripe-js";
+import { API_ENDPOINTS } from "../config/api";
 
 // Load Stripe outside of component to avoid recreating on every render
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_test_key_here');
+const stripePromise = loadStripe(
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "pk_test_your_test_key_here"
+);
 
 interface StripeCheckoutProps {
   amount: number;
@@ -18,7 +20,12 @@ interface StripeCheckoutProps {
   disabled?: boolean;
 }
 
-const CheckoutForm: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onError, disabled }) => {
+const CheckoutForm: React.FC<StripeCheckoutProps> = ({
+  amount,
+  onSuccess,
+  onError,
+  disabled,
+}) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -37,38 +44,40 @@ const CheckoutForm: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onErro
     try {
       // Create payment intent
       const response = await fetch(API_ENDPOINTS.CREATE_PAYMENT_INTENT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           amount,
-          currency: 'gbp'
-        })
+          currency: "gbp",
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create payment intent');
+        throw new Error("Failed to create payment intent");
       }
 
       const { clientSecret } = await response.json();
 
       // Confirm payment
-      const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement)!,
-        }
-      });
+      const { error: paymentError, paymentIntent } =
+        await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: elements.getElement(CardElement)!,
+          },
+        });
 
       if (paymentError) {
-        setError(paymentError.message || 'Payment failed');
-        onError(paymentError.message || 'Payment failed');
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        setError(paymentError.message || "Payment failed");
+        onError(paymentError.message || "Payment failed");
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
         onSuccess(paymentIntent.id);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment failed';
+      const errorMessage =
+        err instanceof Error ? err.message : "Payment failed";
       setError(errorMessage);
       onError(errorMessage);
     } finally {
@@ -79,15 +88,15 @@ const CheckoutForm: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onErro
   const cardElementOptions = {
     style: {
       base: {
-        fontSize: '16px',
-        color: '#424770',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        '::placeholder': {
-          color: '#aab7c4',
+        fontSize: "16px",
+        color: "#424770",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        "::placeholder": {
+          color: "#aab7c4",
         },
       },
       invalid: {
-        color: '#9e2146',
+        color: "#9e2146",
       },
     },
     hidePostalCode: true, // Hide the zip code field
@@ -131,7 +140,9 @@ const CheckoutForm: React.FC<StripeCheckoutProps> = ({ amount, onSuccess, onErro
       <div className="text-xs text-gray-500 text-center">
         <p>🔒 Your payment information is secure and encrypted</p>
         <p>💳 We accept all major credit and debit cards</p>
-        <p>📝 Note: Zip code field is hidden but may be required by your bank</p>
+        <p>
+          📝 Note: Zip code field is hidden but may be required by your bank
+        </p>
       </div>
     </form>
   );
@@ -145,4 +156,4 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = (props) => {
   );
 };
 
-export default StripeCheckout; 
+export default StripeCheckout;

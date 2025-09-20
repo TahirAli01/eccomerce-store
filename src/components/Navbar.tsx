@@ -1,17 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useCart } from '../contexts/CartContext';
-import { ShoppingCart, User, Menu, X, Store, Settings, Search, Bell, Heart, UserCircle, ChevronDown, LogOut, User as UserIcon } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContext";
+import {
+  ShoppingCart,
+  User,
+  Menu,
+  X,
+  Store,
+  Settings,
+  Search,
+  Bell,
+  Heart,
+  UserCircle,
+  ChevronDown,
+  LogOut,
+  User as UserIcon,
+} from "lucide-react";
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
-  const { getItemCount } = useCart();
+  const { getItemCount, debugCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -20,29 +34,32 @@ const Navbar: React.FC = () => {
       setIsScrolled(window.scrollY > 10);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsUserDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
     setIsMenuOpen(false);
   };
 
   const getDashboardPath = () => {
-    if (!user) return '/login';
+    if (!user) return "/login";
     return `/dashboard/${user.role}`;
   };
 
@@ -54,7 +71,7 @@ const Navbar: React.FC = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
-      setSearchTerm('');
+      setSearchTerm("");
       setIsMenuOpen(false);
     }
   };
@@ -63,17 +80,19 @@ const Navbar: React.FC = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
-      setSearchTerm('');
+      setSearchTerm("");
       setIsMenuOpen(false);
     }
   };
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100' 
-        : 'bg-white shadow-sm'
-    }`}>
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-100"
+          : "bg-white shadow-sm"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 lg:h-20">
           {/* Logo */}
@@ -89,7 +108,9 @@ const Navbar: React.FC = () => {
                 <span className="text-xl lg:text-2xl font-bold text-blue-600">
                   ZapMart
                 </span>
-                <span className="text-xs text-gray-500 mt-1/2 font-bold ">Your Ultimate Store</span>
+                <span className="text-xs text-gray-500 mt-1/2 font-bold ">
+                  Your Ultimate Store
+                </span>
               </div>
             </Link>
           </div>
@@ -101,13 +122,13 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/products"
                   className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    isActive('/products')
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    isActive("/products")
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`}
                 >
                   Products
-                  {isActive('/products') && (
+                  {isActive("/products") && (
                     <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
                   )}
                 </Link>
@@ -116,8 +137,8 @@ const Navbar: React.FC = () => {
                   to={getDashboardPath()}
                   className={`relative px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                     isActive(getDashboardPath())
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-700 hover:text-blue-600 hover:bg-blue-50"
                   }`}
                 >
                   Dashboard
@@ -188,22 +209,32 @@ const Navbar: React.FC = () => {
                       <UserCircle className="h-5 w-5 text-white" />
                     </div>
                     <div className="text-sm text-left">
-                      <div className="font-medium text-gray-900">{user.name}</div>
-                      <div className="text-xs text-gray-500 capitalize">{user.role}</div>
+                      <div className="font-medium text-gray-900">
+                        {user.name}
+                      </div>
+                      <div className="text-xs text-gray-500 capitalize">
+                        {user.role}
+                      </div>
                     </div>
-                    <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${
-                      isUserDropdownOpen ? 'rotate-180' : ''
-                    }`} />
+                    <ChevronDown
+                      className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${
+                        isUserDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
 
                   {/* User Dropdown Menu */}
                   {isUserDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {user.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {user.email}
+                        </div>
                       </div>
-                      
+
                       <Link
                         to="/profile"
                         className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -212,7 +243,7 @@ const Navbar: React.FC = () => {
                         <UserIcon className="h-4 w-4 mr-3 text-gray-500" />
                         Profile Settings
                       </Link>
-                      
+
                       <Link
                         to={getDashboardPath()}
                         className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -221,9 +252,9 @@ const Navbar: React.FC = () => {
                         <Settings className="h-4 w-4 mr-3 text-gray-500" />
                         Dashboard
                       </Link>
-                      
+
                       <div className="border-t border-gray-100 my-1"></div>
-                      
+
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -262,18 +293,22 @@ const Navbar: React.FC = () => {
               >
                 <ShoppingCart className="h-6 w-6" />
                 {getItemCount() > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-bold">
                     {getItemCount()}
                   </span>
                 )}
               </Link>
             )}
-            
+
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </button>
           </div>
         </div>
@@ -308,21 +343,21 @@ const Navbar: React.FC = () => {
                   <Link
                     to="/products"
                     className={`block px-4 py-3 rounded-xl text-gray-700 transition-all duration-300 ${
-                      isActive('/products')
-                        ? 'text-blue-600 bg-blue-50 font-medium'
-                        : 'hover:text-blue-600 hover:bg-gray-50'
+                      isActive("/products")
+                        ? "text-blue-600 bg-blue-50 font-medium"
+                        : "hover:text-blue-600 hover:bg-gray-50"
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Products
                   </Link>
-                  
+
                   <Link
                     to={getDashboardPath()}
                     className={`block px-4 py-3 rounded-xl text-gray-700 transition-all duration-300 ${
                       isActive(getDashboardPath())
-                        ? 'text-blue-600 bg-blue-50 font-medium'
-                        : 'hover:text-blue-600 hover:bg-gray-50'
+                        ? "text-blue-600 bg-blue-50 font-medium"
+                        : "hover:text-blue-600 hover:bg-gray-50"
                     }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -349,12 +384,16 @@ const Navbar: React.FC = () => {
                       <UserCircle className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">{user.name}</div>
-                      <div className="text-sm text-gray-500 capitalize">{user.role}</div>
+                      <div className="font-medium text-gray-900">
+                        {user.name}
+                      </div>
+                      <div className="text-sm text-gray-500 capitalize">
+                        {user.role}
+                      </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <Link
                   to="/profile"
                   className="block w-full px-4 py-3 text-left text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
@@ -362,7 +401,7 @@ const Navbar: React.FC = () => {
                 >
                   Profile Settings
                 </Link>
-                
+
                 <button
                   onClick={handleLogout}
                   className="w-full px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all duration-300"

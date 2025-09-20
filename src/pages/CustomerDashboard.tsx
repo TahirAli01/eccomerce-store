@@ -1,7 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Package, Clock, CheckCircle, XCircle, Star, MessageSquare } from 'lucide-react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Star,
+  MessageSquare,
+} from "lucide-react";
+import axios from "axios";
 
 interface Order {
   id: string;
@@ -30,33 +37,35 @@ const CustomerDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'orders' | 'reviews'>('orders');
+  const [activeTab, setActiveTab] = useState<"orders" | "reviews">("orders");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [ordersResponse, reviewsResponse] = await Promise.all([
-          axios.get('http://localhost:3001/api/orders'),
-          axios.get('http://localhost:3001/api/reviews')
+          axios.get("http://localhost:3001/api/orders"),
+          axios.get("http://localhost:3001/api/reviews"),
         ]);
-        
+
         setOrders(ordersResponse.data);
-        
+
         // Fetch product names for reviews
         const reviewsWithProductNames = await Promise.all(
           reviewsResponse.data.map(async (review: Review) => {
             try {
-              const productResponse = await axios.get(`http://localhost:3001/api/products/${review.productId}`);
+              const productResponse = await axios.get(
+                `http://localhost:3001/api/reviews/products/${review.productId}`
+              );
               return { ...review, productName: productResponse.data.name };
             } catch (error) {
-              return { ...review, productName: 'Unknown Product' };
+              return { ...review, productName: "Unknown Product" };
             }
           })
         );
-        
+
         setReviews(reviewsWithProductNames);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -67,11 +76,11 @@ const CustomerDashboard: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
+      case "pending":
         return <Clock className="h-5 w-5 text-yellow-500" />;
-      case 'paid':
+      case "paid":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'cancelled':
+      case "cancelled":
         return <XCircle className="h-5 w-5 text-red-500" />;
       default:
         return <Package className="h-5 w-5 text-gray-500" />;
@@ -80,14 +89,14 @@ const CustomerDashboard: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "paid":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -103,7 +112,9 @@ const CustomerDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Customer Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Customer Dashboard
+          </h1>
           <p className="text-gray-600">Welcome back, {user?.name}!</p>
         </div>
 
@@ -115,8 +126,12 @@ const CustomerDashboard: React.FC = () => {
                 <Package className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-900">Total Orders</h3>
-                <p className="text-2xl font-bold text-blue-600">{orders.length}</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Total Orders
+                </h3>
+                <p className="text-2xl font-bold text-blue-600">
+                  {orders.length}
+                </p>
               </div>
             </div>
           </div>
@@ -127,9 +142,11 @@ const CustomerDashboard: React.FC = () => {
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-900">Completed Orders</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Completed Orders
+                </h3>
                 <p className="text-2xl font-bold text-green-600">
-                  {orders.filter(order => order.status === 'paid').length}
+                  {orders.filter((order) => order.status === "paid").length}
                 </p>
               </div>
             </div>
@@ -141,8 +158,12 @@ const CustomerDashboard: React.FC = () => {
                 <MessageSquare className="h-6 w-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-900">Reviews Written</h3>
-                <p className="text-2xl font-bold text-yellow-600">{reviews.length}</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Reviews Written
+                </h3>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {reviews.length}
+                </p>
               </div>
             </div>
           </div>
@@ -153,21 +174,21 @@ const CustomerDashboard: React.FC = () => {
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               <button
-                onClick={() => setActiveTab('orders')}
+                onClick={() => setActiveTab("orders")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'orders'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "orders"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 Orders
               </button>
               <button
-                onClick={() => setActiveTab('reviews')}
+                onClick={() => setActiveTab("reviews")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'reviews'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  activeTab === "reviews"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
                 Reviews
@@ -177,16 +198,20 @@ const CustomerDashboard: React.FC = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'orders' ? (
+        {activeTab === "orders" ? (
           /* Orders List */
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Order History</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Order History
+              </h2>
             </div>
 
             {orders.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-gray-600">No orders found. Start shopping to see your orders here!</p>
+                <p className="text-gray-600">
+                  No orders found. Start shopping to see your orders here!
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -205,8 +230,13 @@ const CustomerDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
+                          {order.status.charAt(0).toUpperCase() +
+                            order.status.slice(1)}
                         </span>
                         <p className="text-lg font-bold text-gray-900 mt-1">
                           £{order.total.toFixed(2)}
@@ -216,7 +246,10 @@ const CustomerDashboard: React.FC = () => {
 
                     <div className="space-y-2">
                       {order.items.map((item, index) => (
-                        <div key={index} className="flex justify-between text-sm">
+                        <div
+                          key={index}
+                          className="flex justify-between text-sm"
+                        >
                           <span className="text-gray-600">
                             {item.name} x {item.quantity}
                           </span>
@@ -235,12 +268,17 @@ const CustomerDashboard: React.FC = () => {
           /* Reviews List */
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">My Reviews</h2>
+              <h2 className="text-xl font-semibold text-gray-900">
+                My Reviews
+              </h2>
             </div>
 
             {reviews.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-gray-600">No reviews yet. Review products you've purchased to see them here!</p>
+                <p className="text-gray-600">
+                  No reviews yet. Review products you've purchased to see them
+                  here!
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -261,14 +299,14 @@ const CustomerDashboard: React.FC = () => {
                             key={star}
                             className={`h-5 w-5 ${
                               star <= review.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
                             }`}
                           />
                         ))}
                       </div>
                     </div>
-                    
+
                     <p className="text-gray-700">{review.review}</p>
                   </div>
                 ))}

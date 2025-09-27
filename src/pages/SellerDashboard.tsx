@@ -15,11 +15,13 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  mainImage: string;
+  sampleImages: string[];
   description: string;
   weight: number;
   dimensions: string;
   category: string; // This should be the category ID
+  affiliatedLink?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -44,8 +46,17 @@ const SellerDashboard: React.FC = () => {
     category: "",
     weight: "",
     dimensions: "",
-    imageUrl:
-      "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
+    affiliatedLink: "",
+  });
+
+  const [files, setFiles] = useState({
+    mainImage: null as File | null,
+    sampleImages: [] as File[],
+  });
+
+  const [previewUrls, setPreviewUrls] = useState({
+    mainImage: "",
+    sampleImages: [] as string[],
   });
 
   useEffect(() => {
@@ -68,14 +79,58 @@ const SellerDashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'mainImage' | 'sampleImages') => {
+    const selectedFiles = Array.from(e.target.files || []);
+    
+    if (type === 'mainImage') {
+      const file = selectedFiles[0];
+      if (file) {
+        setFiles(prev => ({ ...prev, mainImage: file }));
+        const url = URL.createObjectURL(file);
+        setPreviewUrls(prev => ({ ...prev, mainImage: url }));
+      }
+    } else {
+      const newFiles = selectedFiles.slice(0, 4); // Limit to 4 files
+      setFiles(prev => ({ ...prev, sampleImages: newFiles }));
+      const urls = newFiles.map(file => URL.createObjectURL(file));
+      setPreviewUrls(prev => ({ ...prev, sampleImages: urls }));
+    }
+  };
+
+  const clearFiles = () => {
+    setFiles({ mainImage: null, sampleImages: [] });
+    setPreviewUrls({ mainImage: "", sampleImages: [] });
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      const formData = new FormData();
+      
+      // Add form fields
+      Object.entries(productForm).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+
+      // Add files
+      if (files.mainImage) {
+        formData.append('mainImage', files.mainImage);
+      }
+      
+      files.sampleImages.forEach((file, index) => {
+        formData.append('sampleImages', file);
+      });
+
       if (editingProduct) {
         const response = await axios.put(
           `http://localhost:3001/api/products/${editingProduct.id}`,
-          productForm
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
         );
         setProducts(
           products.map((p) => (p.id === editingProduct.id ? response.data : p))
@@ -84,7 +139,12 @@ const SellerDashboard: React.FC = () => {
       } else {
         const response = await axios.post(
           "http://localhost:3001/api/products",
-          productForm
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
         );
         setProducts([...products, response.data]);
         setShowAddProduct(false);
@@ -98,9 +158,9 @@ const SellerDashboard: React.FC = () => {
         category: "",
         weight: "",
         dimensions: "",
-        imageUrl:
-          "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
+        affiliatedLink: "",
       });
+      clearFiles();
     } catch (error) {
       console.error("Error saving product:", error);
       alert("Error saving product. Please try again.");
@@ -116,7 +176,11 @@ const SellerDashboard: React.FC = () => {
       category: product.category,
       weight: product.weight.toString(),
       dimensions: product.dimensions,
-      imageUrl: product.imageUrl,
+      affiliatedLink: product.affiliatedLink || "",
+    });
+    setPreviewUrls({
+      mainImage: product.mainImage,
+      sampleImages: product.sampleImages,
     });
     setShowAddProduct(true);
   };
@@ -233,9 +297,9 @@ const SellerDashboard: React.FC = () => {
                 category: "",
                 weight: "",
                 dimensions: "",
-                imageUrl:
-                  "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
+                affiliatedLink: "",
               });
+              clearFiles();
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
           >
@@ -368,16 +432,63 @@ const SellerDashboard: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image URL
+                  Main Product Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, 'mainImage')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required={!editingProduct}
+                />
+                {previewUrls.mainImage && (
+                  <div className="mt-2">
+                    <img
+                      src={previewUrls.mainImage}
+                      alt="Main product preview"
+                      className="w-32 h-32 object-cover rounded-md"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sample Images (up to 4)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleFileChange(e, 'sampleImages')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {previewUrls.sampleImages.length > 0 && (
+                  <div className="mt-2 flex space-x-2">
+                    {previewUrls.sampleImages.map((url, index) => (
+                      <img
+                        key={index}
+                        src={url}
+                        alt={`Sample ${index + 1}`}
+                        className="w-24 h-24 object-cover rounded-md"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Affiliated Link (Optional)
                 </label>
                 <input
                   type="url"
-                  value={productForm.imageUrl}
+                  value={productForm.affiliatedLink}
                   onChange={(e) =>
-                    setProductForm({ ...productForm, imageUrl: e.target.value })
+                    setProductForm({ ...productForm, affiliatedLink: e.target.value })
                   }
+                  placeholder="https://example.com/affiliate-link"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
                 />
               </div>
 
@@ -393,6 +504,7 @@ const SellerDashboard: React.FC = () => {
                   onClick={() => {
                     setShowAddProduct(false);
                     setEditingProduct(null);
+                    clearFiles();
                   }}
                   className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-md transition-colors"
                 >
@@ -423,7 +535,7 @@ const SellerDashboard: React.FC = () => {
                 <div key={product.id} className="p-6">
                   <div className="flex items-center space-x-4">
                     <img
-                      src={product.imageUrl}
+                      src={product.mainImage}
                       alt={product.name}
                       className="w-16 h-16 object-cover rounded-md"
                     />

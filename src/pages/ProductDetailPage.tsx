@@ -11,7 +11,9 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  mainImage: string;
+  sampleImages?: string[];
+  affiliatedLink?: string;
   description: string;
   weight: number;
   dimensions: string;
@@ -95,7 +97,9 @@ const ProductDetailPage: React.FC = () => {
           id: product.id,
           name: product.name,
           price: product.price,
-          imageUrl: product.imageUrl,
+          mainImage: product.mainImage,
+          sampleImages: product.sampleImages,
+          affiliatedLink: product.affiliatedLink,
           weight: product.weight,
         });
       }
@@ -152,7 +156,7 @@ const ProductDetailPage: React.FC = () => {
             {/* Product Image */}
             <div className="aspect-square rounded-lg overflow-hidden">
               <img
-                src={product.imageUrl}
+                src={product.mainImage}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />

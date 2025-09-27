@@ -165,7 +165,7 @@ const CheckoutPage: React.FC = () => {
                     className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 border-b border-gray-200 pb-4"
                   >
                     <img
-                      src={item.imageUrl}
+                      src={item.mainImage}
                       alt={item.name}
                       className="w-20 h-20 sm:w-16 sm:h-16 object-cover rounded-md flex-shrink-0"
                     />

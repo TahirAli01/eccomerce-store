@@ -7,7 +7,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  mainImage: string;
   description: string;
   category: {
     _id: string;
@@ -234,7 +234,7 @@ const ProductsPage: React.FC = () => {
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all transform hover:scale-105"
               >
                 <img
-                  src={product.imageUrl}
+                  src={product.mainImage}
                   alt={product.name}
                   className="w-full h-48 object-cover"
                 />

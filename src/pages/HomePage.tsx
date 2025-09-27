@@ -29,7 +29,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  mainImage: string;
   description: string;
 }
 
@@ -126,7 +126,7 @@ const HomePage: React.FC = () => {
     { src: ElectricScooter, alt: "Electric Scooter" },
     { src: iPhone12Mini, alt: "iPhone 12 Mini" },
     { src: QuartzWatch, alt: "Quartz Watch" },
-  ].map((img, idx) => (
+  ].map((img) => (
     <div
       key={img.alt}
       className="relative flex items-center justify-center min-h-[400px] bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"
@@ -251,7 +251,7 @@ const HomePage: React.FC = () => {
                 >
                   <div className="relative overflow-hidden">
                     <img
-                      src={product.imageUrl}
+                      src={product.mainImage}
                       alt={product.name}
                       className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                     />

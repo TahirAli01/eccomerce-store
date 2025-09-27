@@ -37,7 +37,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  mainImage: string;
   sellerId: string;
   sellerName: string;
   sellerEmail: string;
@@ -55,7 +55,7 @@ interface Transaction {
     id: string;
     name: string;
     price: number;
-    imageUrl: string;
+    mainImage: string;
     weight: number;
     quantity: number;
   }>;
@@ -84,7 +84,7 @@ interface OrderDetails {
     id: string;
     name: string;
     price: number;
-    imageUrl: string;
+    mainImage: string;
     weight: number;
     quantity: number;
     productDetails: {
@@ -1025,7 +1025,7 @@ const AdminDashboard: React.FC = () => {
                             <div className="flex-shrink-0 h-16 w-16">
                               <img
                                 className="h-16 w-16 rounded-lg object-cover"
-                                src={product.imageUrl}
+                                src={product.mainImage}
                                 alt={product.name}
                               />
                             </div>
@@ -1590,7 +1590,7 @@ const AdminDashboard: React.FC = () => {
                           <div className="flex-shrink-0 h-16 w-16">
                             <img
                               className="h-16 w-16 rounded-lg object-cover"
-                              src={item.imageUrl}
+                              src={item.mainImage}
                               alt={item.name}
                             />
                           </div>

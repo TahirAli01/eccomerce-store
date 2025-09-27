@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import accessoryAcSize from "../assets/images/accessory-ac-size.png";
 import Bicycle from "../assets/images/Bicycle.jpg";
-import Blog from "../assets/images/Blog.jpg";
+
 import clothesMenJacket from "../assets/images/clothes_men_jacket.jpg";
 import clothesMenJacket1 from "../assets/images/clothes_men_jacket1.jpg";
 import clothesMenShoes from "../assets/images/clothes_men_shoes.jpg";
@@ -118,7 +118,7 @@ const HomePage: React.FC = () => {
   const imageSlides = [
     { src: accessoryAcSize, alt: "Accessory AC Size" },
     { src: Bicycle, alt: "Bicycle" },
-    { src: Blog, alt: "Blog" },
+    
     { src: clothesMenJacket, alt: "Men Jacket" },
     { src: clothesMenJacket1, alt: "Men Jacket 1" },
     { src: clothesMenShoes, alt: "Men Shoes" },

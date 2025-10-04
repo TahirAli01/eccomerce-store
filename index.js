@@ -22,21 +22,20 @@ vercelApp.use(helmet());
 vercelApp.use(cors());
 vercelApp.use(express.json());
 
+// Debug middleware to log requests
+vercelApp.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
 // Serve static files from the dist directory (built frontend)
 vercelApp.use(express.static(path.join(__dirname, "dist")));
 
 // Mount the API routes - the server app already has /api prefix
 vercelApp.use("/", serverApp);
 
-// Health check endpoint
-vercelApp.get("/api/health", (req, res) => {
-  res.json({
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // Catch-all handler: send back React's index.html file for any non-API routes
+// This should come AFTER mounting the server app to avoid interfering with API routes
 vercelApp.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });

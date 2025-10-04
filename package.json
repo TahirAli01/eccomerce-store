@@ -9,9 +9,12 @@
     "server": "nodemon server/index.js",
     "server2": "node server/index.js",
     "build": "vite build",
+    "vercel-build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:stripe": "node test-stripe.js"
+    "test:stripe": "node test-stripe.js",
+    "test:deployment": "node test-deployment.js",
+    "start": "node index.js"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^3.9.0",

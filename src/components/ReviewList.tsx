@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Star, CheckCircle, Calendar } from "lucide-react";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 interface Review {
   id: string;
@@ -44,7 +45,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ productId, reviewStats }) => {
   const fetchReviews = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/reviews/products/${productId}`
+        `${API_ENDPOINTS.REVIEWS}/products/${productId}`
       );
       setReviews(response.data);
     } catch (error) {

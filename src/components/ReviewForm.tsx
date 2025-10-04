@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Star, Send, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 interface ReviewFormProps {
   productId: string;
@@ -38,7 +39,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       }
 
       try {
-        const response = await axios.get("http://localhost:3001/api/orders", {
+        const response = await axios.get(API_ENDPOINTS.ORDERS, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -87,7 +88,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       if (existingReview && isEditing) {
         // Update existing review
         await axios.put(
-          `http://localhost:3001/api/reviews/${existingReview.id}`,
+          `${API_ENDPOINTS.REVIEWS}/${existingReview.id}`,
           {
             rating,
             review: review.trim(),
@@ -101,7 +102,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       } else {
         // Create new review
         await axios.post(
-          `http://localhost:3001/api/reviews/products/${productId}`,
+          `${API_ENDPOINTS.REVIEWS}/products/${productId}`,
           {
             rating,
             review: review.trim(),
@@ -139,14 +140,11 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
     setIsSubmitting(true);
     try {
-      await axios.delete(
-        `http://localhost:3001/api/reviews/${existingReview.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axios.delete(`${API_ENDPOINTS.REVIEWS}/${existingReview.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       onReviewSubmitted();
     } catch (error: unknown) {
       const errorMessage =

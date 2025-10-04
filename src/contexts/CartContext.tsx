@@ -11,8 +11,7 @@ interface CartItem {
   name: string;
   price: number;
   quantity: number;
-  mainImage: string;
-  sampleImages?: string[];
+  images: string[];
   affiliatedLink?: string;
   weight: number;
 }

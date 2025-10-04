@@ -31,13 +31,24 @@ const productSchema = new mongoose.Schema(
       width: Number,
       height: Number,
     },
-    mainImage: {
-      type: String,
-      required: true,
-    },
-    sampleImages: [{
-      type: String,
-    }],
+    images: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+    colors: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    sizes: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     affiliatedLink: {
       type: String,
       trim: true,

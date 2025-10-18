@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
 import accessoryAcSize from "../assets/images/accessory-ac-size.png";
-import Bicycle from "../assets/images/Bicycle.jpg";
-import Blog from "../assets/images/Blog.jpg";
-import clothesMenJacket from "../assets/images/clothes_men_jacket.jpg";
-import clothesMenJacket1 from "../assets/images/clothes_men_jacket1.jpg";
-import clothesMenShoes from "../assets/images/clothes_men_shoes.jpg";
-import clothesTrainer from "../assets/images/clothes_trainer.jpg";
-import ElectricScooter from "../assets/images/ElectricScooter.jpg";
-import iPhone12Mini from "../assets/images/iPhone-12-mini.png";
-import QuartzWatch from "../assets/images/Quartz_watch.png";
 import Carousel from "../components/Carousel";
 import { Link } from "react-router-dom";
 import {
@@ -24,12 +15,13 @@ import {
   Eye,
 } from "lucide-react";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  images: string[];
   description: string;
 }
 
@@ -40,7 +32,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/products");
+        const response = await axios.get(API_ENDPOINTS.PRODUCTS);
         setFeaturedProducts(response.data.slice(0, 8));
         setIsLoading(false);
       } catch (error) {
@@ -63,7 +55,7 @@ const HomePage: React.FC = () => {
 
   // Carousel slides: first is the original hero, rest are images
   const heroSlide = (
-    <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 overflow-hidden min-h-[400px] flex items-center justify-center">
+    <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 overflow-hidden min-h-[500px] flex items-center justify-center">
       <div className="absolute inset-0 bg-black opacity-20"></div>
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="text-center text-white">
@@ -87,14 +79,22 @@ const HomePage: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               to="/products"
-              className="group bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center"
+              className="group bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/30 hover:border-white/50 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center"
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(8px)",
+              }}
             >
               Start Shopping
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               to="/register"
-              className="group border-2 border-white text-white hover:bg-white hover:text-blue-600 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 flex items-center"
+              className="group bg-white/20 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/30 hover:border-white/50 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 flex items-center"
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                backdropFilter: "blur(8px)",
+              }}
             >
               Become a Seller
               <Users className="ml-2 h-5 w-5 group-hover:scale-110 transition-transform" />
@@ -115,32 +115,80 @@ const HomePage: React.FC = () => {
     </section>
   );
 
-  const imageSlides = [
-    { src: accessoryAcSize, alt: "Accessory AC Size" },
-    { src: Bicycle, alt: "Bicycle" },
-    { src: Blog, alt: "Blog" },
-    { src: clothesMenJacket, alt: "Men Jacket" },
-    { src: clothesMenJacket1, alt: "Men Jacket 1" },
-    { src: clothesMenShoes, alt: "Men Shoes" },
-    { src: clothesTrainer, alt: "Trainer" },
-    { src: ElectricScooter, alt: "Electric Scooter" },
-    { src: iPhone12Mini, alt: "iPhone 12 Mini" },
-    { src: QuartzWatch, alt: "Quartz Watch" },
-  ].map((img, idx) => (
-    <div
-      key={img.alt}
-      className="relative flex items-center justify-center min-h-[400px] bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700"
-    >
-      <img
-        src={img.src}
-        alt={img.alt}
-        className="max-h-[350px] w-auto rounded-2xl shadow-xl border-4 border-white/30 object-contain mx-auto"
-        style={{ background: "rgba(255,255,255,0.05)" }}
-      />
-    </div>
-  ));
+  const categoriesSlide = (
+    <section className="relative bg-gradient-to-br from-green-600 via-teal-600 to-blue-700 overflow-hidden min-h-[500px] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black opacity-20"></div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left side - Content */}
+          <div className="text-white">
+            <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 mb-8">
+              <ShoppingBag className="h-5 w-5 mr-2" />
+              <span className="text-sm font-medium">
+                Explore All Categories
+              </span>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Shop by
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">
+                Category
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-green-100 mb-8 leading-relaxed">
+              From electronics and fashion to home goods and sports equipment -
+              we have everything you need organized in easy-to-browse
+              categories.
+            </p>
+            <div className="flex flex-wrap gap-3 mb-8">
+              {categories.slice(0, 4).map((category, index) => (
+                <div
+                  key={index}
+                  className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 flex items-center"
+                >
+                  <span className="text-lg mr-2">{category.icon}</span>
+                  <span className="text-sm font-medium">{category.name}</span>
+                </div>
+              ))}
+            </div>
+            <Link
+              to="/products"
+              className="group bg-white text-green-600 hover:bg-gray-100 font-bold py-4 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center inline-flex"
+            >
+              Browse All Categories
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
 
-  const slides = [heroSlide, ...imageSlides];
+          {/* Right side - Image */}
+          <div className="flex justify-center lg:justify-end">
+            <div className="relative">
+              <img
+                src={accessoryAcSize}
+                alt="Accessory Categories"
+                className="max-h-[350px] w-auto rounded-2xl shadow-2xl border-4 border-white/30 object-contain"
+                style={{ background: "rgba(255,255,255,0.05)" }}
+              />
+              <div className="absolute -top-4 -right-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                New Arrivals!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Floating Elements */}
+      <div className="absolute top-20 right-10 animate-bounce">
+        <div className="w-5 h-5 bg-yellow-300 rounded-full opacity-60"></div>
+      </div>
+      <div className="absolute top-40 left-20 animate-pulse">
+        <div className="w-4 h-4 bg-pink-300 rounded-full opacity-60"></div>
+      </div>
+      <div className="absolute bottom-20 right-1/4 animate-bounce delay-1000">
+        <div className="w-6 h-6 bg-green-300 rounded-full opacity-60"></div>
+      </div>
+    </section>
+  );
+
+  const slides = [heroSlide, categoriesSlide];
 
   return (
     <div className="min-h-screen">
@@ -251,7 +299,7 @@ const HomePage: React.FC = () => {
                 >
                   <div className="relative overflow-hidden">
                     <img
-                      src={product.imageUrl}
+                      src={product.images[0] || "/placeholder-image.png"}
                       alt={product.name}
                       className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                     />

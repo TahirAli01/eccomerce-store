@@ -10,6 +10,7 @@ import {
   Eye,
 } from "lucide-react";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 interface Stats {
   totalCustomers: number;
@@ -37,7 +38,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  images: string[];
   sellerId: string;
   sellerName: string;
   sellerEmail: string;
@@ -55,7 +56,7 @@ interface Transaction {
     id: string;
     name: string;
     price: number;
-    imageUrl: string;
+    images: string[];
     weight: number;
     quantity: number;
   }>;
@@ -84,7 +85,7 @@ interface OrderDetails {
     id: string;
     name: string;
     price: number;
-    imageUrl: string;
+    images: string[];
     weight: number;
     quantity: number;
     productDetails: {
@@ -155,11 +156,11 @@ const AdminDashboard: React.FC = () => {
           transactionsResponse,
           categoriesResponse,
         ] = await Promise.all([
-          axios.get("http://localhost:3001/api/admin/stats"),
-          axios.get("http://localhost:3001/api/admin/users"),
-          axios.get("http://localhost:3001/api/admin/products"),
-          axios.get("http://localhost:3001/api/admin/transactions"),
-          axios.get("http://localhost:3001/api/admin/categories"),
+          axios.get(API_ENDPOINTS.ADMIN_STATS),
+          axios.get(API_ENDPOINTS.ADMIN_USERS),
+          axios.get(API_ENDPOINTS.ADMIN_PRODUCTS),
+          axios.get(`${API_ENDPOINTS.ADMIN_STATS}/transactions`),
+          axios.get(`${API_ENDPOINTS.ADMIN_STATS}/categories`),
         ]);
 
         console.log("user response = ", usersResponse);
@@ -168,10 +169,7 @@ const AdminDashboard: React.FC = () => {
           ...statsResponse.data,
           totalCategories: categoriesResponse.data.length,
         });
-        console.log(
-          "http://localhost:3001/api/admin/transactions",
-          usersResponse.data
-        );
+        console.log("Admin transactions", usersResponse.data);
         setUsers(usersResponse.data);
         setProducts(productsResponse.data);
         setTransactions(transactionsResponse.data);
@@ -248,9 +246,7 @@ const AdminDashboard: React.FC = () => {
 
   const approveSeller = async (userId: string) => {
     try {
-      await axios.put(
-        `http://localhost:3001/api/admin/users/${userId}/approve`
-      );
+      await axios.put(`${API_ENDPOINTS.ADMIN_USERS}/${userId}/approve`);
       setUsers(
         users.map((user) =>
           user.id === userId ? { ...user, isApproved: true } : user
@@ -264,7 +260,7 @@ const AdminDashboard: React.FC = () => {
 
   const toggleBanUser = async (userId: string, isBanned: boolean) => {
     try {
-      await axios.put(`http://localhost:3001/api/admin/users/${userId}/ban`, {
+      await axios.put(`${API_ENDPOINTS.ADMIN_USERS}/${userId}/ban`, {
         isBanned,
       });
       setUsers(
@@ -286,7 +282,7 @@ const AdminDashboard: React.FC = () => {
       )
     ) {
       try {
-        await axios.delete(`http://localhost:3001/api/admin/users/${userId}`);
+        await axios.delete(`${API_ENDPOINTS.ADMIN_USERS}/${userId}`);
 
         // Remove user from local state
         const deletedUser = users.find((u) => u.id === userId);
@@ -318,7 +314,7 @@ const AdminDashboard: React.FC = () => {
   const deleteProduct = async (productId: string) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        await axios.delete(`http://localhost:3001/api/products/${productId}`);
+        await axios.delete(`${API_ENDPOINTS.PRODUCTS}/${productId}`);
         const updatedProducts = products.filter((p) => p.id !== productId);
         setProducts(updatedProducts);
         setFilteredProducts(filteredProducts.filter((p) => p.id !== productId));
@@ -338,7 +334,7 @@ const AdminDashboard: React.FC = () => {
   const fetchOrderDetails = async (orderId: string) => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/api/admin/orders/${orderId}`
+        `${API_ENDPOINTS.ADMIN_ORDERS}/${orderId}`
       );
       setSelectedOrder(response.data);
     } catch (error) {
@@ -390,7 +386,7 @@ const AdminDashboard: React.FC = () => {
       if (editingCategory) {
         // Update existing category
         const response = await axios.put(
-          `http://localhost:3001/api/admin/categories/${editingCategory.id}`,
+          `${API_ENDPOINTS.ADMIN_STATS}/categories/${editingCategory.id}`,
           categoryForm
         );
         setCategories(
@@ -406,7 +402,7 @@ const AdminDashboard: React.FC = () => {
       } else {
         // Create new category
         const response = await axios.post(
-          "http://localhost:3001/api/admin/categories",
+          `${API_ENDPOINTS.ADMIN_STATS}/categories`,
           categoryForm
         );
         setCategories([...categories, response.data]);
@@ -428,7 +424,7 @@ const AdminDashboard: React.FC = () => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         await axios.delete(
-          `http://localhost:3001/api/admin/categories/${categoryId}`
+          `${API_ENDPOINTS.ADMIN_STATS}/categories/${categoryId}`
         );
         setCategories(categories.filter((cat) => cat.id !== categoryId));
         setFilteredCategories(
@@ -1025,7 +1021,9 @@ const AdminDashboard: React.FC = () => {
                             <div className="flex-shrink-0 h-16 w-16">
                               <img
                                 className="h-16 w-16 rounded-lg object-cover"
-                                src={product.imageUrl}
+                                src={
+                                  product.images[0] || "/placeholder-image.png"
+                                }
                                 alt={product.name}
                               />
                             </div>
@@ -1590,7 +1588,7 @@ const AdminDashboard: React.FC = () => {
                           <div className="flex-shrink-0 h-16 w-16">
                             <img
                               className="h-16 w-16 rounded-lg object-cover"
-                              src={item.imageUrl}
+                              src={item.images[0] || "/placeholder-image.png"}
                               alt={item.name}
                             />
                           </div>

@@ -8,18 +8,23 @@ import {
   EyeOff,
   Edit,
   Trash2,
+  ShoppingBag,
 } from "lucide-react";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  images: string[];
   description: string;
   weight: number;
   dimensions: string;
   category: string; // This should be the category ID
+  colors?: string[];
+  sizes?: string[];
+  affiliatedLink?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -29,13 +34,36 @@ interface Category {
   name: string;
 }
 
+interface OrderItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  weight: number;
+}
+
+interface Order {
+  id: string;
+  userId: string;
+  items: OrderItem[];
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
 const SellerDashboard: React.FC = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formMessage, setFormMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [productForm, setProductForm] = useState({
     name: "",
@@ -44,20 +72,46 @@ const SellerDashboard: React.FC = () => {
     category: "",
     weight: "",
     dimensions: "",
-    imageUrl:
-      "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
+    affiliatedLink: "",
+    colors: "",
+    sizes: [] as string[],
   });
+
+  const [files, setFiles] = useState({
+    images: [] as File[],
+  });
+
+  const [previewUrls, setPreviewUrls] = useState({
+    images: [] as string[],
+  });
+
+  // Define available sizes based on category
+
+  const getAvailableSizes = (categoryName: string) => {
+    if (
+      categoryName.toLowerCase().includes("clothing") ||
+      categoryName.toLowerCase().includes("clothes")
+    ) {
+      return ["XS", "S", "M", "L", "XL", "XXL"];
+    } else if (categoryName.toLowerCase().includes("sports")) {
+      return ["S", "M", "L"];
+    }
+    return [];
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsResponse, categoriesResponse] = await Promise.all([
-          axios.get("http://localhost:3001/api/seller/products"),
-          axios.get("http://localhost:3001/api/categories"),
-        ]);
+        const [productsResponse, categoriesResponse, ordersResponse] =
+          await Promise.all([
+            axios.get(API_ENDPOINTS.SELLER_PRODUCTS),
+            axios.get(API_ENDPOINTS.CATEGORIES),
+            axios.get(API_ENDPOINTS.SELLER_ORDERS),
+          ]);
 
         setProducts(productsResponse.data);
         setCategories(categoriesResponse.data);
+        setOrders(ordersResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -68,42 +122,115 @@ const SellerDashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const newFiles = selectedFiles.slice(0, 10); // Limit to 10 files
+    setFiles((prev) => ({ ...prev, images: newFiles }));
+    const urls = newFiles.map((file) => URL.createObjectURL(file));
+    setPreviewUrls((prev) => ({ ...prev, images: urls }));
+  };
+
+  const clearFiles = () => {
+    setFiles({ images: [] });
+    setPreviewUrls({ images: [] });
+  };
+
+  const resetForm = () => {
+    setProductForm({
+      name: "",
+      description: "",
+      price: "",
+      category: "",
+      weight: "",
+      dimensions: "",
+      affiliatedLink: "",
+      colors: "",
+      sizes: [],
+    });
+    clearFiles();
+    setFormMessage(null);
+  };
+
+  const handleSizeChange = (size: string, checked: boolean) => {
+    if (checked) {
+      setProductForm((prev) => ({
+        ...prev,
+        sizes: [...prev.sizes, size],
+      }));
+    } else {
+      setProductForm((prev) => ({
+        ...prev,
+        sizes: prev.sizes.filter((s) => s !== size),
+      }));
+    }
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormLoading(true);
+    setFormMessage(null);
 
     try {
+      const formData = new FormData();
+
+      // Add form fields
+      Object.entries(productForm).forEach(([key, value]) => {
+        if (key === "sizes") {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value as string);
+        }
+      });
+
+      // Add files
+      files.images.forEach((file) => {
+        formData.append("images", file);
+      });
+
       if (editingProduct) {
         const response = await axios.put(
-          `http://localhost:3001/api/products/${editingProduct.id}`,
-          productForm
+          `${API_ENDPOINTS.PRODUCTS}/${editingProduct.id}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
         );
         setProducts(
           products.map((p) => (p.id === editingProduct.id ? response.data : p))
         );
         setEditingProduct(null);
+        setFormMessage({
+          type: "success",
+          text: "Product updated successfully! 🎉",
+        });
+        setTimeout(() => setFormMessage(null), 5000);
       } else {
-        const response = await axios.post(
-          "http://localhost:3001/api/products",
-          productForm
-        );
+        const response = await axios.post(API_ENDPOINTS.PRODUCTS, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
         setProducts([...products, response.data]);
         setShowAddProduct(false);
+        setFormMessage({
+          type: "success",
+          text: "Product added successfully! 🎉",
+        });
+        setTimeout(() => setFormMessage(null), 5000);
       }
 
       // Reset form
-      setProductForm({
-        name: "",
-        description: "",
-        price: "",
-        category: "",
-        weight: "",
-        dimensions: "",
-        imageUrl:
-          "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
-      });
+      resetForm();
     } catch (error) {
       console.error("Error saving product:", error);
-      alert("Error saving product. Please try again.");
+      setFormMessage({
+        type: "error",
+        text: "Error saving product. Please try again. ❌",
+      });
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -116,7 +243,12 @@ const SellerDashboard: React.FC = () => {
       category: product.category,
       weight: product.weight.toString(),
       dimensions: product.dimensions,
-      imageUrl: product.imageUrl,
+      affiliatedLink: product.affiliatedLink || "",
+      colors: product.colors ? product.colors.join(", ") : "",
+      sizes: product.sizes || [],
+    });
+    setPreviewUrls({
+      images: product.images,
     });
     setShowAddProduct(true);
   };
@@ -124,7 +256,7 @@ const SellerDashboard: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        await axios.delete(`http://localhost:3001/api/products/${id}`);
+        await axios.delete(`${API_ENDPOINTS.PRODUCTS}/${id}`);
         setProducts(products.filter((p) => p.id !== id));
       } catch (error) {
         console.error("Error deleting product:", error);
@@ -136,7 +268,7 @@ const SellerDashboard: React.FC = () => {
   const toggleProductStatus = async (product: Product) => {
     try {
       const response = await axios.put(
-        `http://localhost:3001/api/products/${product.id}`,
+        `${API_ENDPOINTS.PRODUCTS}/${product.id}`,
         {
           ...product,
           isActive: !product.isActive,
@@ -150,10 +282,40 @@ const SellerDashboard: React.FC = () => {
     }
   };
 
-  const totalRevenue = products.reduce(
-    (sum, product) => sum + product.price * 10,
-    0
-  ); // Simulated revenue
+  // Calculate real revenue from orders
+  const totalRevenue = orders.reduce((sum, order) => {
+    // Only count paid orders
+    if (order.status === "paid" || order.status === "delivered") {
+      // Calculate revenue for this seller's products in the order
+      const sellerItems = order.items.filter((item: OrderItem) => {
+        // Check if this item belongs to the current seller
+        return products.some((product) => product.id === item.id);
+      });
+
+      return (
+        sum +
+        sellerItems.reduce((itemSum: number, item: OrderItem) => {
+          return itemSum + item.price * item.quantity;
+        }, 0)
+      );
+    }
+    return sum;
+  }, 0);
+
+  // Calculate additional stats
+  const totalOrders = orders.filter((order) =>
+    order.items.some((item: OrderItem) =>
+      products.some((product) => product.id === item.id)
+    )
+  ).length;
+
+  const completedOrders = orders.filter(
+    (order) =>
+      (order.status === "paid" || order.status === "delivered") &&
+      order.items.some((item: OrderItem) =>
+        products.some((product) => product.id === item.id)
+      )
+  ).length;
 
   if (loading) {
     return (
@@ -172,7 +334,7 @@ const SellerDashboard: React.FC = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center">
               <div className="bg-blue-100 p-3 rounded-full">
@@ -207,6 +369,22 @@ const SellerDashboard: React.FC = () => {
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center">
+              <div className="bg-orange-100 p-3 rounded-full">
+                <ShoppingBag className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Total Orders
+                </h3>
+                <p className="text-2xl font-bold text-orange-600">
+                  {totalOrders}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center">
               <div className="bg-purple-100 p-3 rounded-full">
                 <DollarSign className="h-6 w-6 text-purple-600" />
               </div>
@@ -214,6 +392,9 @@ const SellerDashboard: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900">Revenue</h3>
                 <p className="text-2xl font-bold text-purple-600">
                   £{totalRevenue.toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {completedOrders} completed orders
                 </p>
               </div>
             </div>
@@ -226,16 +407,7 @@ const SellerDashboard: React.FC = () => {
             onClick={() => {
               setShowAddProduct(true);
               setEditingProduct(null);
-              setProductForm({
-                name: "",
-                description: "",
-                price: "",
-                category: "",
-                weight: "",
-                dimensions: "",
-                imageUrl:
-                  "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
-              });
+              resetForm();
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2 transition-colors"
           >
@@ -246,18 +418,40 @@ const SellerDashboard: React.FC = () => {
 
         {/* Add/Edit Product Form */}
         {showAddProduct && (
-          <div className="bg-white rounded-lg shadow-md mb-6">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {editingProduct ? "Edit Product" : "Add New Product"}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 mb-8 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+              <h2 className="text-2xl font-bold text-white">
+                {editingProduct ? "✏️ Edit Product" : "➕ Add New Product"}
               </h2>
+              <p className="text-blue-100 mt-1">
+                {editingProduct
+                  ? "Update your product information"
+                  : "Fill in the details to add a new product"}
+              </p>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Product Name
+            <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
+              {/* Form Message */}
+              {formMessage && (
+                <div
+                  className={`p-4 rounded-lg border-2 ${
+                    formMessage.type === "success"
+                      ? "bg-green-50 border-green-200 text-green-800"
+                      : "bg-red-50 border-red-200 text-red-800"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <span className="text-lg mr-2">
+                      {formMessage.type === "success" ? "✅" : "❌"}
+                    </span>
+                    <span className="font-medium">{formMessage.text}</span>
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    🏷️ Product Name
                   </label>
                   <input
                     type="text"
@@ -265,14 +459,15 @@ const SellerDashboard: React.FC = () => {
                     onChange={(e) =>
                       setProductForm({ ...productForm, name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
+                    placeholder="Enter product name"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Price (£)
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    💰 Price (£)
                   </label>
                   <input
                     type="number"
@@ -281,15 +476,16 @@ const SellerDashboard: React.FC = () => {
                     onChange={(e) =>
                       setProductForm({ ...productForm, price: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
+                    placeholder="0.00"
                     required
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  📝 Description
                 </label>
                 <textarea
                   value={productForm.description}
@@ -299,16 +495,17 @@ const SellerDashboard: React.FC = () => {
                       description: e.target.value,
                     })
                   }
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={4}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 resize-none"
+                  placeholder="Describe your product in detail..."
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📂 Category
                   </label>
                   <select
                     value={productForm.category}
@@ -318,10 +515,10 @@ const SellerDashboard: React.FC = () => {
                         category: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
                     required
                   >
-                    <option value="">Select Category</option>
+                    <option value="">Choose a category</option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
@@ -330,9 +527,9 @@ const SellerDashboard: React.FC = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Weight (kg)
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    ⚖️ Weight (kg)
                   </label>
                   <input
                     type="number"
@@ -341,14 +538,15 @@ const SellerDashboard: React.FC = () => {
                     onChange={(e) =>
                       setProductForm({ ...productForm, weight: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
+                    placeholder="0.0"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dimensions
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    📏 Dimensions
                   </label>
                   <input
                     type="text"
@@ -360,43 +558,169 @@ const SellerDashboard: React.FC = () => {
                       })
                     }
                     placeholder="e.g., 20x15x10 cm"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
                     required
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image URL
+              {/* Colors Input */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  🎨 Colors
+                </label>
+                <input
+                  type="text"
+                  value={productForm.colors}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, colors: e.target.value })
+                  }
+                  placeholder="e.g., Red, Blue, Green (comma-separated)"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
+                />
+                <p className="text-xs text-gray-500">
+                  💡 Separate multiple colors with commas
+                </p>
+              </div>
+
+              {/* Sizes Selection - Show for Clothing and Sports categories */}
+              {productForm.category &&
+                (() => {
+                  const categoryName =
+                    categories.find((c) => c.id === productForm.category)
+                      ?.name || "";
+                  const availableSizes = getAvailableSizes(categoryName);
+                  return availableSizes.length > 0;
+                })() && (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      📏 Available Sizes
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {getAvailableSizes(
+                        categories.find((c) => c.id === productForm.category)
+                          ?.name || ""
+                      ).map((size) => (
+                        <label
+                          key={size}
+                          className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                            productForm.sizes.includes(size)
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-gray-200 hover:border-gray-300 text-gray-700"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={productForm.sizes.includes(size)}
+                            onChange={(e) =>
+                              handleSizeChange(size, e.target.checked)
+                            }
+                            className="sr-only"
+                          />
+                          <span className="text-sm font-medium">{size}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  📸 Product Images (up to 10)
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 cursor-pointer"
+                    required={!editingProduct}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="text-gray-500 text-sm">
+                      Click to select images or drag & drop
+                    </span>
+                  </div>
+                </div>
+                {previewUrls.images.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-3">
+                      Preview ({previewUrls.images.length} images):
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {previewUrls.images.map((url, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={url}
+                            alt={`Product ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border-2 border-gray-200 group-hover:border-blue-500 transition-all duration-200"
+                          />
+                          <div className="absolute top-1 right-1 bg-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="text-xs text-gray-600 font-medium">
+                              {index + 1}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  🔗 Affiliated Link (Optional)
                 </label>
                 <input
                   type="url"
-                  value={productForm.imageUrl}
+                  value={productForm.affiliatedLink}
                   onChange={(e) =>
-                    setProductForm({ ...productForm, imageUrl: e.target.value })
+                    setProductForm({
+                      ...productForm,
+                      affiliatedLink: e.target.value,
+                    })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  placeholder="https://example.com/affiliate-link"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400"
                 />
+                <p className="text-xs text-gray-500">
+                  💡 Add an affiliate link to earn commissions
+                </p>
               </div>
 
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors"
+                  disabled={formLoading}
+                  className={`flex items-center justify-center px-8 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${
+                    formLoading
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  }`}
                 >
-                  {editingProduct ? "Update Product" : "Add Product"}
+                  {formLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      {editingProduct ? "Updating..." : "Adding..."}
+                    </>
+                  ) : (
+                    <>
+                      {editingProduct ? "✏️ Update Product" : "➕ Add Product"}
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddProduct(false);
                     setEditingProduct(null);
+                    resetForm();
                   }}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-md transition-colors"
+                  disabled={formLoading}
+                  className="flex items-center justify-center px-8 py-3 rounded-lg font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border-2 border-gray-200 hover:border-gray-300 transition-all duration-200"
                 >
-                  Cancel
+                  ❌ Cancel
                 </button>
               </div>
             </form>
@@ -423,7 +747,7 @@ const SellerDashboard: React.FC = () => {
                 <div key={product.id} className="p-6">
                   <div className="flex items-center space-x-4">
                     <img
-                      src={product.imageUrl}
+                      src={product.images[0] || "/placeholder-image.png"}
                       alt={product.name}
                       className="w-16 h-16 object-cover rounded-md"
                     />
@@ -452,6 +776,42 @@ const SellerDashboard: React.FC = () => {
                           {product.isActive ? "Active" : "Inactive"}
                         </span>
                       </div>
+
+                      {/* Display Colors and Sizes */}
+                      {(product.colors && product.colors.length > 0) ||
+                      (product.sizes && product.sizes.length > 0) ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {product.colors && product.colors.length > 0 && (
+                            <div className="flex items-center space-x-1">
+                              <span className="text-xs text-gray-500">
+                                Colors:
+                              </span>
+                              <span className="text-xs text-gray-700">
+                                {Array.isArray(product.colors)
+                                  ? product.colors.join(", ")
+                                  : product.colors}
+                              </span>
+                            </div>
+                          )}
+                          {product.sizes && product.sizes.length > 0 && (
+                            <div className="flex items-center space-x-1">
+                              <span className="text-xs text-gray-500">
+                                Sizes:
+                              </span>
+                              <div className="flex space-x-1">
+                                {product.sizes.map((size, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
+                                  >
+                                    {size}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="flex items-center space-x-2">

@@ -9,6 +9,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 interface Order {
   id: string;
@@ -43,8 +44,8 @@ const CustomerDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const [ordersResponse, reviewsResponse] = await Promise.all([
-          axios.get("http://localhost:3001/api/orders"),
-          axios.get("http://localhost:3001/api/reviews"),
+          axios.get(API_ENDPOINTS.ORDERS),
+          axios.get(API_ENDPOINTS.REVIEWS),
         ]);
 
         setOrders(ordersResponse.data);
@@ -54,7 +55,7 @@ const CustomerDashboard: React.FC = () => {
           reviewsResponse.data.map(async (review: Review) => {
             try {
               const productResponse = await axios.get(
-                `http://localhost:3001/api/reviews/products/${review.productId}`
+                `${API_ENDPOINTS.REVIEWS}/products/${review.productId}`
               );
               return { ...review, productName: productResponse.data.name };
             } catch (error) {

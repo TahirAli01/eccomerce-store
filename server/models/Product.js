@@ -31,10 +31,27 @@ const productSchema = new mongoose.Schema(
       width: Number,
       height: Number,
     },
-    imageUrl: {
+    images: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
+    colors: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    sizes: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    affiliatedLink: {
       type: String,
-      default:
-        "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg",
+      trim: true,
     },
     seller: {
       type: mongoose.Schema.Types.ObjectId,

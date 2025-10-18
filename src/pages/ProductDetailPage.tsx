@@ -4,6 +4,7 @@ import { ShoppingCart, ArrowLeft, Package, Truck, Star } from "lucide-react";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 import ReviewForm from "../components/ReviewForm";
 import ReviewList from "../components/ReviewList";
 
@@ -11,7 +12,8 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  images: string[];
+  affiliatedLink?: string;
   description: string;
   weight: number;
   dimensions: string;
@@ -48,16 +50,14 @@ const ProductDetailPage: React.FC = () => {
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:3001/api/products/${id}`
-      );
+      const response = await axios.get(`${API_ENDPOINTS.PRODUCTS}/${id}`);
       setProduct(response.data);
 
       // Check if user has already reviewed this product
       if (user) {
         try {
           const reviewsResponse = await axios.get(
-            `http://localhost:3001/api/reviews/products/${id}`
+            `${API_ENDPOINTS.REVIEWS}/products/${id}`
           );
           const userReviewData = reviewsResponse.data.find(
             (review: { user: { _id: string } }) => review.user._id === user.id
@@ -95,7 +95,8 @@ const ProductDetailPage: React.FC = () => {
           id: product.id,
           name: product.name,
           price: product.price,
-          imageUrl: product.imageUrl,
+          images: product.images,
+          affiliatedLink: product.affiliatedLink,
           weight: product.weight,
         });
       }
@@ -152,7 +153,7 @@ const ProductDetailPage: React.FC = () => {
             {/* Product Image */}
             <div className="aspect-square rounded-lg overflow-hidden">
               <img
-                src={product.imageUrl}
+                src={product.images[0] || "/placeholder-image.png"}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />

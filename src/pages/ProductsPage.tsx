@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Filter, Star } from "lucide-react";
 import axios from "axios";
+import { API_ENDPOINTS } from "../config/api";
 
 interface Product {
   id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  images: string[];
   description: string;
   category: {
     _id: string;
@@ -53,8 +54,8 @@ const ProductsPage: React.FC = () => {
     const fetchData = async () => {
       try {
         const [productsResponse, categoriesResponse] = await Promise.all([
-          axios.get("http://localhost:3001/api/products"),
-          axios.get("http://localhost:3001/api/categories"),
+          axios.get(API_ENDPOINTS.PRODUCTS),
+          axios.get(API_ENDPOINTS.CATEGORIES),
         ]);
 
         setProducts(productsResponse.data);
@@ -234,7 +235,7 @@ const ProductsPage: React.FC = () => {
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all transform hover:scale-105"
               >
                 <img
-                  src={product.imageUrl}
+                  src={product.images[0] || "/placeholder-image.png"}
                   alt={product.name}
                   className="w-full h-48 object-cover"
                 />

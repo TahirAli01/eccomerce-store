@@ -1,6 +1,7 @@
 import express from 'express';
 import * as productController from '../controllers/productController.js';
 import { authenticateToken, requireRole, requireApproval } from '../middleware/auth.js';
+import { uploadProductImages } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ router.post('/',
   authenticateToken, 
   requireRole(['seller']), 
   requireApproval,
+  uploadProductImages,
   productController.createProduct
 );
 
@@ -20,6 +22,7 @@ router.put('/:id',
   authenticateToken, 
   requireRole(['seller']), 
   requireApproval,
+  uploadProductImages,
   productController.updateProduct
 );
 

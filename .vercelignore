@@ -52,6 +52,7 @@ tests/
 server/database/
 server/index_old.js
 
+
 # Temporary files
 tmp/
 temp/

@@ -19,7 +19,7 @@ This guide will help you set up Stripe payment processing for your e-commerce pl
 
 ### Backend (Server)
 
-Create a `.env` file in your project root with:
+Create a `.env` file in the `server/` directory with:
 
 ```bash
 # Stripe Configuration
@@ -31,6 +31,7 @@ JWT_SECRET=your_jwt_secret_key_here
 
 # Server Configuration
 PORT=3001
+MONGODB_URI=mongodb://localhost:27017/ecommerce-store
 ```
 
 ### Frontend (Client)
@@ -43,16 +44,31 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_test_publishable_key_here
 
 ## Step 3: Install Dependencies
 
-The required dependencies are already installed:
+### Server Dependencies
+
+Navigate to the server directory and install dependencies:
 
 ```bash
-npm install stripe @stripe/stripe-js
+cd server
+npm install
 ```
+
+The server already includes the required Stripe dependency.
+
+### Client Dependencies
+
+In the project root, install client dependencies:
+
+```bash
+npm install
+```
+
+The client already includes the required Stripe dependencies.
 
 ## Step 4: Test the Integration
 
-1. Start your server: `npm run server`
-2. Start your client: `npm run client`
+1. Start your server: `cd server && npm run dev`
+2. Start your client: `npm run dev`
 3. Add items to cart and proceed to checkout
 4. Use Stripe test card numbers:
    - **Success**: 4242 4242 4242 4242
@@ -119,4 +135,4 @@ project/
 2. Add payment method saving for returning customers
 3. Implement subscription billing if needed
 4. Add payment analytics and reporting
-5. Consider implementing Stripe Connect for marketplace functionality 
+5. Consider implementing Stripe Connect for marketplace functionality
